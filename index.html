@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🤖 Automation Registry</title>
+  <meta name="description" content="김수민 운영 자동화 대시보드 v2" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div>
+        <h1>🤖 Automation Registry</h1>
+        <div class="subtitle">김수민 운영 자동화 대시보드 · v2</div>
+      </div>
+      <div class="meta">
+        <div>마지막 상태체크 <span class="pill" id="last-checked">-</span></div>
+        <div style="margin-top:6px;">레지스트리 업데이트 <span class="pill" id="registry-updated">-</span></div>
+      </div>
+    </header>
+
+    <section class="stats">
+      <div class="stat-card"><div class="label">총 자동화</div><div class="value" id="stat-total">0</div></div>
+      <div class="stat-card running"><div class="label">Running</div><div class="value" id="stat-running">0</div></div>
+      <div class="stat-card stopped"><div class="label">Stopped</div><div class="value" id="stat-stopped">0</div></div>
+      <div class="stat-card error"><div class="label">Error</div><div class="value" id="stat-error">0</div></div>
+    </section>
+
+    <div class="filter-bar">
+      <span class="label">카테고리</span>
+      <select id="filter-category">
+        <option value="all">전체</option>
+        <option value="launchd-bot">launchd-봇</option>
+        <option value="cron">크론</option>
+        <option value="script">스크립트</option>
+        <option value="api">API</option>
+        <option value="calendar">캘린더</option>
+      </select>
+      <span class="label">상태</span>
+      <select id="filter-status">
+        <option value="all">전체</option>
+        <option value="running">실행중</option>
+        <option value="scheduled">예약/대기</option>
+        <option value="stopped">정지</option>
+        <option value="error">오류</option>
+        <option value="manual">수동</option>
+        <option value="active">활성</option>
+      </select>
+      <input id="filter-search" type="text" placeholder="이름/경로/목적 검색..." />
+    </div>
+
+    <section class="grid" id="grid"></section>
+
+    <h2 class="section-title">📜 변경 이력 (최근 30일)</h2>
+    <div class="timeline" id="timeline"></div>
+    <button class="load-more" id="load-more" style="display:none;">전체 이력 보기</button>
+
+    <footer class="page-footer">
+      © 2026 · ptsm89 · Automation Registry v2
+    </footer>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" id="modal">
+      <button class="close" id="modal-close">×</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const state = {
+      registry: null,
+      changelog: null,
+      status: null,
+      filters: { category: 'all', status: 'all', search: '' },
+      showAllHistory: false,
+    };
+
+    async function loadJSON(path) {
+      const res = await fetch(path + '?t=' + Date.now());
+      if (!res.ok) throw new Error('fetch ' + path + ' failed: ' + res.status);
+      return res.json();
+    }
+
+    function relativeTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      const diff = Date.now() - d.getTime();
+      const abs = Math.abs(diff);
+      const m = 60000, h = 3600000, day = 86400000;
+      if (abs < m) return '방금';
+      if (abs < h) return Math.floor(abs / m) + '분 전';
+      if (abs < day) return Math.floor(abs / h) + '시간 전';
+      if (abs < 30 * day) return Math.floor(abs / day) + '일 전';
+      return d.toISOString().slice(0, 10);
+    }
+
+    function fmtDateTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      return d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', hour12: false });
+    }
+
+    function effectiveStatus(item) {
+      const statusSvc = state.status && state.status.services && state.status.services[item.id];
+      if (statusSvc && statusSvc.status) return statusSvc.status;
+      if (item.state === 'active' && item.category === 'launchd-bot') return 'running';
+      if (item.state === 'active') return 'active';
+      if (item.state === 'scheduled') return 'scheduled';
+      if (item.state === 'manual') return 'manual';
+      return item.state || 'unknown';
+    }
+
+    function statusBadge(status) {
+      const map = {
+        running: { cls: 'running', label: '🟢 Running' },
+        scheduled: { cls: 'scheduled', label: '🟡 Scheduled' },
+        stopped: { cls: 'stopped', label: '🔴 Stopped' },
+        error: { cls: 'error', label: '⚠️ Error' },
+        manual: { cls: 'manual', label: '⚪ Manual' },
+        active: { cls: 'api', label: '🔑 Active' },
+        unknown: { cls: 'manual', label: '· Unknown' },
+      };
+      return map[status] || map.unknown;
+    }
+
+    function renderStats() {
+      const items = state.registry.automations;
+      let running = 0, stopped = 0, error = 0;
+      items.forEach(i => {
+        const s = effectiveStatus(i);
+        if (s === 'running') running++;
+        else if (s === 'stopped') stopped++;
+        else if (s === 'error') error++;
+      });
+      document.getElementById('stat-total').textContent = items.length;
+      document.getElementById('stat-running').textContent = running;
+      document.getElementById('stat-stopped').textContent = stopped;
+      document.getElementById('stat-error').textContent = error;
+    }
+
+    function matchesFilter(item) {
+      const f = state.filters;
+      if (f.category !== 'all' && item.category !== f.category) return false;
+      if (f.status !== 'all') {
+        const s = effectiveStatus(item);
+        if (s !== f.status) return false;
+      }
+      if (f.search) {
+        const q = f.search.toLowerCase();
+        const hay = [item.name, item.path, item.purpose, item.id].filter(Boolean).join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const items = state.registry.automations.filter(matchesFilter);
+      if (items.length === 0) {
+        grid.innerHTML = '<div style="color:var(--text-dim);padding:16px;">조건에 맞는 자동화가 없습니다.</div>';
+        return;
+      }
+      items.forEach(item => {
+        const s = effectiveStatus(item);
+        const b = statusBadge(s);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="top-row">
+            <div class="title"><span class="icon">${item.icon || '⚙️'}</span><span>${escapeHTML(item.name)}</span></div>
+            <span class="badge ${b.cls}">${b.label}</span>
+          </div>
+          <div><span class="tag">${escapeHTML(item.category)}</span></div>
+          <div class="purpose">${escapeHTML(item.purpose || '')}</div>
+          <div class="schedule">⏱ ${escapeHTML(item.schedule || '-')}</div>
+          <div class="path">${escapeHTML(item.path || '')}</div>
+          <div class="meta-row">
+            <span>수정: ${relativeTime(item.last_modified)}</span>
+            <span>ID: ${escapeHTML(item.id)}</span>
+          </div>
+        `;
+        card.addEventListener('click', () => openModal(item));
+        grid.appendChild(card);
+      });
+    }
+
+    function openModal(item) {
+      const s = effectiveStatus(item);
+      const b = statusBadge(s);
+      const statusSvc = state.status && state.status.services && state.status.services[item.id];
+      const content = document.getElementById('modal-content');
+      const tech = (item.tech || []).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join(' ');
+      const related = (item.related_files || []).map(f => `<div class="path">${escapeHTML(f)}</div>`).join('');
+      content.innerHTML = `
+        <h2>${item.icon || '⚙️'} ${escapeHTML(item.name)}</h2>
+        <span class="badge ${b.cls}">${b.label}</span>
+        <span class="tag" style="margin-left:6px;">${escapeHTML(item.category)}</span>
+        <dl>
+          <dt>ID</dt><dd>${escapeHTML(item.id)}</dd>
+          <dt>경로</dt><dd class="path">${escapeHTML(item.path || '-')}</dd>
+          <dt>스케줄</dt><dd>${escapeHTML(item.schedule || '-')}</dd>
+          <dt>목적</dt><dd>${escapeHTML(item.purpose || '-')}</dd>
+          <dt>기술</dt><dd class="tech-list">${tech || '-'}</dd>
+          <dt>등록일</dt><dd>${escapeHTML(item.created_at || '-')}</dd>
+          <dt>최종 수정</dt><dd>${escapeHTML(item.last_modified || '-')} (${relativeTime(item.last_modified)})</dd>
+          ${item.cron_id ? `<dt>Cron ID</dt><dd class="path">${escapeHTML(item.cron_id)}</dd>` : ''}
+          ${item.state_file ? `<dt>상태파일</dt><dd class="path">${escapeHTML(item.state_file)}</dd>` : ''}
+          ${related ? `<dt>관련 파일</dt><dd>${related}</dd>` : ''}
+          ${item.notes ? `<dt>비고</dt><dd>${escapeHTML(item.notes)}</dd>` : ''}
+          ${statusSvc ? `<dt>실시간</dt><dd>PID: ${statusSvc.pid ?? '-'} · exit: ${statusSvc.exit_code ?? '-'} · process: ${statusSvc.process_found ? '✅' : '❌'}${statusSvc.note ? '<br/><span style="color:var(--text-dim);font-size:12px;">' + escapeHTML(statusSvc.note) + '</span>' : ''}</dd>` : ''}
+        </dl>
+      `;
+      document.getElementById('modal-backdrop').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-backdrop').classList.remove('active');
+    }
+
+    function renderTimeline() {
+      const tl = document.getElementById('timeline');
+      tl.innerHTML = '';
+      const entries = (state.changelog.entries || []).slice().sort((a, b) =>
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      const now = Date.now();
+      const thirtyD = 30 * 86400000;
+      const recent = entries.filter(e => (now - new Date(e.timestamp).getTime()) <= thirtyD);
+      const toShow = state.showAllHistory ? entries : recent;
+      const btn = document.getElementById('load-more');
+      if (entries.length > recent.length) {
+        btn.style.display = 'block';
+        btn.textContent = state.showAllHistory ? `최근 30일만 보기 (${recent.length}건)` : `전체 이력 보기 (${entries.length}건)`;
+      } else {
+        btn.style.display = 'none';
+      }
+      const iconMap = { added: '➕', registered: '📌', modified: '✏️', deleted: '🗑️', updated: '🔄' };
+      toShow.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `
+          <div class="time">${fmtDateTime(e.timestamp)}</div>
+          <div class="action-icon">${iconMap[e.action] || '·'}</div>
+          <div class="body">
+            <div><span class="target">${escapeHTML(e.target)}</span> <span class="tag">${escapeHTML(e.category || '-')}</span></div>
+            <div class="summary">${escapeHTML(e.summary || '')}${e.reason ? ' · ' + escapeHTML(e.reason) : ''}</div>
+          </div>
+        `;
+        tl.appendChild(div);
+      });
+      if (toShow.length === 0) {
+        tl.innerHTML = '<div style="padding:16px;color:var(--text-dim);">표시할 이력이 없습니다.</div>';
+      }
+    }
+
+    function escapeHTML(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function bindFilters() {
+      document.getElementById('filter-category').addEventListener('change', e => {
+        state.filters.category = e.target.value; renderGrid();
+      });
+      document.getElementById('filter-status').addEventListener('change', e => {
+        state.filters.status = e.target.value; renderGrid();
+      });
+      document.getElementById('filter-search').addEventListener('input', e => {
+        state.filters.search = e.target.value.trim(); renderGrid();
+      });
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('modal-backdrop').addEventListener('click', e => {
+        if (e.target.id === 'modal-backdrop') closeModal();
+      });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+      document.getElementById('load-more').addEventListener('click', () => {
+        state.showAllHistory = !state.showAllHistory; renderTimeline();
+      });
+    }
+
+    async function refresh() {
+      try {
+        const [registry, changelog, status] = await Promise.all([
+          loadJSON('registry.json'),
+          loadJSON('changelog.json'),
+          loadJSON('status.json').catch(() => ({ last_checked_at: null, services: {} })),
+        ]);
+        state.registry = registry;
+        state.changelog = changelog;
+        state.status = status;
+        document.getElementById('last-checked').textContent = fmtDateTime(status && status.last_checked_at);
+        document.getElementById('registry-updated').textContent = fmtDateTime(registry.updated_at);
+        renderStats();
+        renderGrid();
+        renderTimeline();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('grid').innerHTML = '<div style="color:var(--red);padding:16px;">데이터 로드 실패: ' + escapeHTML(err.message) + '</div>';
+      }
+    }
+
+    async function refreshStatusOnly() {
+      try {
+        const status = await loadJSON('status.json');
+        state.status = status;
+        document.getElementById('last-checked').textContent = fmtDateTime(status && status.last_checked_at);
+        renderStats();
+        renderGrid();
+      } catch (e) { /* 무시 */ }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      bindFilters();
+      refresh();
+      setInterval(refreshStatusOnly, 5 * 60 * 1000);
+    });
+  })();
+  </script>
+</body>
+</html>

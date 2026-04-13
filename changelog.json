@@ -1,0 +1,165 @@
+{
+  "version": "2.0.0",
+  "entries": [
+    {
+      "timestamp": "2026-04-13T13:40:00+09:00",
+      "action": "added",
+      "target": "automation-registry",
+      "category": "dashboard",
+      "summary": "Automation Registry Dashboard v2 초기 구축",
+      "reason": "사용자 요청 - 전체 자동화 상황 가시성 확보"
+    },
+    {
+      "timestamp": "2026-04-13T13:40:00+09:00",
+      "action": "registered",
+      "target": "com.patasm.registry-monitor",
+      "category": "launchd-bot",
+      "summary": "상태체크 launchd 모니터 신설 (5분 주기)",
+      "reason": "대시보드 자동 갱신"
+    },
+    {
+      "timestamp": "2026-04-13T00:00:00+09:00",
+      "action": "registered",
+      "target": "com.patasm.ksm-rename-reminder",
+      "category": "launchd-bot",
+      "summary": "ksm→ptsm89 치환 리마인더 봇 등록",
+      "reason": "폴더 체계 치환 결정 누락 방지"
+    },
+    {
+      "timestamp": "2026-04-13T00:00:00+09:00",
+      "action": "registered",
+      "target": "api.kipris-plus",
+      "category": "api",
+      "summary": "KIPRIS Plus API 무료 이용 승인 (6개 서비스)",
+      "reason": "상표검색 업무 자동화"
+    },
+    {
+      "timestamp": "2026-04-13T00:00:00+09:00",
+      "action": "registered",
+      "target": "cron.news-briefing",
+      "category": "cron",
+      "summary": "뉴스 브리핑 크론 등록",
+      "reason": "매일 아침 뉴스 브리핑"
+    },
+    {
+      "timestamp": "2026-04-13T00:00:00+09:00",
+      "action": "registered",
+      "target": "cron.juhee-d2-alert",
+      "category": "cron",
+      "summary": "주희 확인일 D-2 알람 크론 등록",
+      "reason": "주희 확인일 사전 알림"
+    },
+    {
+      "timestamp": "2026-04-13T00:00:00+09:00",
+      "action": "registered",
+      "target": "cron.juhee-d1-alert",
+      "category": "cron",
+      "summary": "주희 확인일 D-1 알람 크론 등록",
+      "reason": "주희 확인일 사전 알림"
+    },
+    {
+      "timestamp": "2026-04-10T00:00:00+09:00",
+      "action": "registered",
+      "target": "com.patasm.mumuki-sales-bot",
+      "category": "launchd-bot",
+      "summary": "무무키 Qoo10 Japan 매출 리포트 봇 등록",
+      "reason": "무무키 일일 매출 모니터링"
+    },
+    {
+      "timestamp": "2026-04-10T00:00:00+09:00",
+      "action": "registered",
+      "target": "api.qoo10-mumuki",
+      "category": "api",
+      "summary": "Qoo10 Mumuki 셀러 API 연동",
+      "reason": "매출 데이터 수집"
+    },
+    {
+      "timestamp": "2026-04-10T00:00:00+09:00",
+      "action": "registered",
+      "target": "api.telegram-mumuki",
+      "category": "api",
+      "summary": "무무키 전용 텔레그램 봇 등록",
+      "reason": "매출 리포트 전용 채널 분리"
+    },
+    {
+      "timestamp": "2026-04-05T00:00:00+09:00",
+      "action": "registered",
+      "target": "script.qoo10-promo-scraper",
+      "category": "script",
+      "summary": "Qoo10 프로모션 스크레이퍼 등록",
+      "reason": "프로모션 모니터링"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "script.notion-reminder",
+      "category": "script",
+      "summary": "노션 리마인더 스크립트 등록",
+      "reason": "노션 기반 할 일 관리"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "script.session-summary",
+      "category": "script",
+      "summary": "세션 요약 스크립트 등록",
+      "reason": "세션 종료 시 요약"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "script.cron-juhee-alert",
+      "category": "script",
+      "summary": "주희 알람 크론 헬퍼 등록",
+      "reason": "크론 등록 자동화"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "script.cron-news-briefing",
+      "category": "script",
+      "summary": "뉴스 브리핑 크론 헬퍼 등록",
+      "reason": "크론 등록 자동화"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "api.telegram-personal",
+      "category": "api",
+      "summary": "개인 텔레그램 봇 등록",
+      "reason": "개인 알림 채널"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "api.gws-cli",
+      "category": "api",
+      "summary": "GWS CLI 등록",
+      "reason": "구글 워크스페이스 통합"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "api.supabase-inventory",
+      "category": "api",
+      "summary": "Supabase inventory-erp 프로젝트 등록",
+      "reason": "재고 ERP DB"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "calendar.ksm-psn",
+      "category": "calendar",
+      "summary": "KSM-psn 개인 캘린더 등록",
+      "reason": "개인 일정 관리"
+    },
+    {
+      "timestamp": "2026-04-01T00:00:00+09:00",
+      "action": "registered",
+      "target": "calendar.ksm-wrk",
+      "category": "calendar",
+      "summary": "KSM-wrk 업무 캘린더 등록",
+      "reason": "업무 일정 관리"
+    }
+  ]
+}
