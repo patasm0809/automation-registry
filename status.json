@@ -1,5 +1,5 @@
 {
-  "last_checked_at": "2026-04-13T13:40:00+09:00",
+  "last_checked_at": "2026-04-13T13:56:16+09:00",
   "checker_version": "1.0.0",
   "services": {
     "com.patasm.mumuki-sales-bot": {
@@ -13,21 +13,21 @@
       "pid": null,
       "exit_code": 0,
       "process_found": false,
-      "note": "StartCalendarInterval - 대기 상태 정상"
+      "note": "대기 상태 (주기 실행 대상)"
     },
     "com.patasm.registry-monitor": {
-      "status": "scheduled",
+      "status": "error",
       "pid": null,
-      "exit_code": 0,
+      "exit_code": 1,
       "process_found": false,
-      "note": "StartInterval 5분 - 대기 상태 정상"
+      "note": "직전 종료 코드 1"
     }
   },
   "summary": {
     "total_monitored": 3,
     "running": 1,
-    "scheduled": 2,
+    "scheduled": 1,
     "stopped": 0,
-    "error": 0
+    "error": 1
   }
 }
