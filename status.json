@@ -1,23 +1,23 @@
 {
-  "last_checked_at": "2026-04-22T11:23:57+09:00",
+  "last_checked_at": "2026-04-22T11:32:10+09:00",
   "checker_version": "1.0.0",
   "services": {
     "com.patasm.mumuki-sales-bot": {
       "status": "running",
-      "pid": 980,
+      "pid": 1262,
       "exit_code": 0,
       "process_found": true
     },
     "com.patasm.ksm-rename-reminder": {
-      "status": "stopped",
+      "status": "scheduled",
       "pid": null,
-      "exit_code": null,
+      "exit_code": 0,
       "process_found": false,
-      "note": "launchctl에 등록되지 않음"
+      "note": "대기 상태 (주기 실행 대상)"
     },
     "com.patasm.registry-monitor": {
       "status": "running",
-      "pid": 47068,
+      "pid": 1270,
       "exit_code": 0,
       "process_found": true
     }
@@ -25,8 +25,8 @@
   "summary": {
     "total_monitored": 3,
     "running": 2,
-    "scheduled": 0,
-    "stopped": 1,
+    "scheduled": 1,
+    "stopped": 0,
     "error": 0
   }
 }
