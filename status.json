@@ -1,11 +1,11 @@
 {
-  "last_checked_at": "2026-05-13T22:09:38+09:00",
+  "last_checked_at": "2026-05-14T08:25:06+09:00",
   "checker_version": "1.0.0",
   "services": {
     "com.patasm.mumuki-sales-bot": {
       "status": "running",
-      "pid": 5763,
-      "exit_code": -15,
+      "pid": 1164,
+      "exit_code": 0,
       "process_found": true
     },
     "com.patasm.ksm-rename-reminder": {
@@ -17,7 +17,7 @@
     },
     "com.patasm.registry-monitor": {
       "status": "running",
-      "pid": 19995,
+      "pid": 1182,
       "exit_code": 0,
       "process_found": true
     }
