@@ -1,5 +1,5 @@
 {
-  "last_checked_at": "2026-11-09T07:23:54+09:00",
+  "last_checked_at": "2026-11-09T07:28:56+09:00",
   "checker_version": "1.0.0",
   "services": {
     "com.patasm.mumuki-sales-bot": {
@@ -17,7 +17,7 @@
     },
     "com.patasm.registry-monitor": {
       "status": "running",
-      "pid": 10855,
+      "pid": 11082,
       "exit_code": 0,
       "process_found": true
     }
